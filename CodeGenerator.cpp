@@ -1,15 +1,11 @@
-// odeGenerator.cpp: implementation of the CodeGenerator class.
-//
-//////////////////////////////////////////////////////////////////////
+
 
 #include "CodeGenerator.h"
 #include <iostream>
 #include <stdexcept>
 #include <bits/stdc++.h>
 #include <stdio.h>
-//////////////////////////////////////////////////////////////////////
-// Construction/Destruction
-//////////////////////////////////////////////////////////////////////
+
 
 CodeGenerator::CodeGenerator()
 {
@@ -37,9 +33,16 @@ CodeGenerator::~CodeGenerator()
     for (int j = 1; j < lastStringConst; ++j) {
         cout << stringConsts[j] << endl;
     }
-    for (int i=0; i<pc; i++){
-        cout << code[i] << endl;
+    std::ofstream output_file;
+    output_file.open ("out.txt");
+    for (int j = 1; j < lastStringConst; ++j) {
+        output_file << stringConsts[j] << endl;
     }
+    for (int i=0; i<pc; i++){
+        output_file << code[i] << endl;
+
+    }
+    output_file.close();
 }
 
 void CodeGenerator::Generate(string sem)
