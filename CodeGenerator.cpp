@@ -34,9 +34,14 @@ CodeGenerator::CodeGenerator()
 
 CodeGenerator::~CodeGenerator()
 {
+    std::ofstream output_file;
+    output_file.open ("out.txt");
     for (int i=0; i<pc; i++){
-        cout << code[i] << endl;
+        output_file << code[i] << endl;
+
     }
+    output_file.close();
+}
 }
 
 void CodeGenerator::Generate(string sem)
