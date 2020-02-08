@@ -99,8 +99,8 @@
     "name": "VAR_DCL",
     "nodes": [
       {
-        "x": 441.0,
-        "y": 132.0,
+        "x": 304.0,
+        "y": 137.0,
         "id": 5,
         "isFinal": false
       },
@@ -135,8 +135,8 @@
         "end": 6,
         "token": "id",
         "func": "",
-        "anchorX": 499.0,
-        "anchorY": 132.5,
+        "anchorX": 373.0,
+        "anchorY": 138.5,
         "isGraph": false,
         "isGlobal": false
       },
@@ -732,7 +732,7 @@
         "start": 37,
         "end": 38,
         "token": "TYPE",
-        "func": "",
+        "func": "makeVariable",
         "anchorX": 300.5,
         "anchorY": 91.0,
         "isGraph": true,
@@ -742,7 +742,7 @@
         "start": 38,
         "end": 39,
         "token": "ASSIGNMENT",
-        "func": "",
+        "func": "makeAssignment",
         "anchorX": 477.5,
         "anchorY": 91.5,
         "isGraph": true,
@@ -1300,7 +1300,7 @@
         "start": 67,
         "end": 69,
         "token": "SIMPLE_VAR",
-        "func": "",
+        "func": "popID",
         "anchorX": 520.5,
         "anchorY": 309.0,
         "isGraph": true,

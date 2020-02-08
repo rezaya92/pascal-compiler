@@ -16,7 +16,7 @@ CodeGenerator::CodeGenerator()
     pc = 0;
     code[pc++] = "target datalayout = \"e-m:e-i64:64-f80:128-n8:16:32:64-S128\"";
     code[pc++] = "target triple = \"x86_64-pc-linux-gnu\"";
-	code[pc++] = "define void @write(i8* %toprint) #0 {";
+	code[pc++] = "define void @write(i8* %toprint) {";
 	code[pc++] = "%1 = alloca i8*, align 8";
 	code[pc++] = "store i8* %toprint, i8** %1, align 8";
 	code[pc++] = "%2 = load i8*, i8** %1, align 8";
@@ -34,6 +34,9 @@ CodeGenerator::CodeGenerator()
 
 CodeGenerator::~CodeGenerator()
 {
+    for (int j = 1; j < lastStringConst; ++j) {
+        cout << stringConsts[j] << endl;
+    }
     for (int i=0; i<pc; i++){
         cout << code[i] << endl;
     }
@@ -41,7 +44,6 @@ CodeGenerator::~CodeGenerator()
 
 void CodeGenerator::Generate(string sem)
 {
-    cout << lastStringConst;
     for (int j = 1; j < lastStringConst; ++j) {
         cout << stringConsts[j] << endl;
     }
@@ -95,7 +97,7 @@ void CodeGenerator::Generate(string sem)
 		}
 		else if (sem == "@icConst"){
 			createVar(to_string(lastTemp), "i32");
-			assignToVariable("i32*","%" + to_string(lastTemp), "i32 ", Scanner::text);
+			assignToVariable("i32","%" + to_string(lastTemp), Scanner::text);
             lastTemp++;
             loadVar("i32", to_string(lastTemp), to_string(lastTemp-1));
 			lastTemp++;
@@ -106,21 +108,21 @@ void CodeGenerator::Generate(string sem)
 			char rcConstHex[16];
 			sprintf(rcConstHex, "%x", *(unsigned int*)&rcConstVal);
             string rcConstHexStr(rcConstHex);
-			assignToVariable("float*","%" + to_string(lastTemp), "float ", "0x"+rcConstHexStr+"00000000");
+			assignToVariable("float","%" + to_string(lastTemp), "0x"+rcConstHexStr+"00000000");
             lastTemp++;
             loadVar("float", to_string(lastTemp), to_string(lastTemp-1));
 			lastTemp++;
 		}
 		else if (sem == "@chConst"){
 			createVar(to_string(lastTemp), "i8");
-			assignToVariable("i8*","%" + to_string(lastTemp), "i8 ", to_string((int)Scanner::text[1]));
+			assignToVariable("i8","%" + to_string(lastTemp), to_string((int)Scanner::text[1]));
             lastTemp++;
             loadVar("i8", to_string(lastTemp), to_string(lastTemp-1));
 			lastTemp++;
 		}
 		else if (sem == "@boolConst"){
 			createVar(to_string(lastTemp), "i1");
-			assignToVariable("i1*","%" + to_string(lastTemp), "i1 ", Scanner::text);
+			assignToVariable("i1","%" + to_string(lastTemp), Scanner::text);
             lastTemp++;
             loadVar("i1", to_string(lastTemp), to_string(lastTemp-1));
 			lastTemp++;
@@ -131,7 +133,7 @@ void CodeGenerator::Generate(string sem)
 			stringConsts[lastStringConst] += "[" + to_string(strConst.size()+1) + " x i8] c\"" + strConst + "\\00\", align 1";
 			createVar(to_string(lastTemp), "i8*");
 			string getStrConstCommand = "getelementptr inbounds ([" + to_string(strConst.size()+1) + " x i8], [" + to_string(strConst.size()+1) + " x i8]* @.str." + to_string(lastStringConst) + ", i32 0, i32 0)";
-			assignToVariable("i8**","%" + to_string(lastTemp), "i8* ", getStrConstCommand);
+			assignToVariable("i8*","%" + to_string(lastTemp), getStrConstCommand);
             lastTemp++;
             loadVar("i8*", to_string(lastTemp), to_string(lastTemp-1));
 			lastStringConst++;
@@ -174,7 +176,22 @@ void CodeGenerator::Generate(string sem)
             if (functab[currentfunc].returnType != symtab[to_string(lastTemp-1)])
                 throw invalid_argument("invalid return type" + functab[currentfunc].returnType);
             code[pc] = "ret " + functab[currentfunc].returnType + " %" + to_string(lastTemp-1);
-        } else throw invalid_argument("no sem like this man");
+            pc++;
+        }
+        else if (sem == "@makeVariable"){
+            string varType = sstack.top();
+            sstack.pop();
+            string varName = sstack.top();
+            createVar(varName, varType);
+        }
+        else if (sem == "@makeAssignment"){
+            string variableName = sstack.top();
+            assignToVariable(symtab[variableName], "%" + variableName, to_string(lastTemp-1));
+        }
+        else if (sem == "@popID"){
+            sstack.pop();
+        }
+        else throw invalid_argument("no sem like this man" + sem);
 	}
 }
 
@@ -186,8 +203,8 @@ void CodeGenerator::createVar(string name, string type) {
 	pc++;
 }
 
-void CodeGenerator::assignToVariable(string variableType, string variableName, string valueType, string valueName) {
-	code[pc] = "store " + valueType + " " + valueName + ", " + variableType + " " + variableName + ", align 1";
+void CodeGenerator::assignToVariable(string type, string variableName, string valueName) {
+	code[pc] = "store " + type + " " + valueName + ", " + type + "* " + variableName + ", align 1";
     pc++;
 }
 

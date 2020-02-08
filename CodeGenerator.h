@@ -36,7 +36,7 @@ public:
 	map<string, FuncProperties> functab;
    	void Generate(string sem);
 	void createVar(string name, string type);
-	void assignToVariable(string variableName, string variableType, string valueName, string valueType);
+	void assignToVariable(string type, string variableName, string valueName) ;
 	void loadVar(string type, string variableName, string valueName);
 	CodeGenerator();
 	virtual ~CodeGenerator();

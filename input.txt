@@ -1,5 +1,8 @@
 function main() : integer
 begin
-    write("hello world !") ;
+    a : integer := 2 ;
+    b : integer := 3 ;
+    c : real ;
+    write("not equal ! ") ;
     return 0 ;
 end 
