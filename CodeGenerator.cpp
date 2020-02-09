@@ -30,11 +30,8 @@ CodeGenerator::CodeGenerator()
 
 CodeGenerator::~CodeGenerator()
 {
-    for (int j = 1; j < lastStringConst; ++j) {
-        cout << stringConsts[j] << endl;
-    }
     std::ofstream output_file;
-    output_file.open ("out.txt");
+    output_file.open ("out.ll");
     for (int j = 1; j < lastStringConst; ++j) {
         output_file << stringConsts[j] << endl;
     }
@@ -191,10 +188,123 @@ void CodeGenerator::Generate(string sem)
             string variableName = sstack.top();
             assignToVariable(symtab[variableName], "%" + variableName, to_string(lastTemp-1));
         }
+        else if (sem == "@makeAssignmentPop"){
+            string variableName = sstack.top();
+            sstack.pop();
+            assignToVariable(symtab[variableName], "%" + variableName, to_string(lastTemp-1));
+        }
         else if (sem == "@popID"){
             sstack.pop();
         }
-        else throw invalid_argument("no sem like this man" + sem);
+        else if (sem == "@pushTemp") {
+            sstack.push(to_string(lastTemp-1));
+        }
+        else if (sem == "@eqCheck") {
+            makeOperation("i1", "%" + to_string(lastTemp) , "%" + to_string(lastTemp-1), "%" + sstack.top(), "icmp eq");
+            sstack.pop();
+            lastTemp++;
+        }
+        else if (sem == "@neCheck") {
+            makeOperation("i1", "%" + to_string(lastTemp) , "%" + to_string(lastTemp-1), "%" + sstack.top(), "icmp ne");
+            sstack.pop();
+            lastTemp++;
+        }
+        else if (sem == "@gtCheck") {
+            makeOperation("i1", "%" + to_string(lastTemp) , "%" + to_string(lastTemp-1), "%" + sstack.top(), "icmp sgt");
+            sstack.pop();
+            lastTemp++;
+        }
+        else if (sem == "@ltCheck") {
+            makeOperation("i1", "%" + to_string(lastTemp) , "%" + to_string(lastTemp-1), "%" + sstack.top(), "icmp slt");
+            sstack.pop();
+            lastTemp++;
+        }
+        else if (sem == "@leCheck") {
+            makeOperation("i1", "%" + to_string(lastTemp) , "%" + to_string(lastTemp-1), "%" + sstack.top(), "icmp sle");
+            sstack.pop();
+            lastTemp++;
+        }
+        else if (sem == "@geCheck") {
+            makeOperation("i1", "%" + to_string(lastTemp) , "%" + to_string(lastTemp-1), "%" + sstack.top(), "icmp sge");
+            sstack.pop();
+            lastTemp++;
+        }
+        else if (sem == "@and"){
+            makeOperation(symtab[to_string(lastTemp-1)], "%" + to_string(lastTemp) , "%" + to_string(lastTemp-1), "%" + sstack.top(), "and");
+            sstack.pop();
+            lastTemp++;
+        }
+        else if (sem == "@or"){
+            makeOperation(symtab[to_string(lastTemp-1)], "%" + to_string(lastTemp) , "%" + to_string(lastTemp-1), "%" + sstack.top(), "or");
+            sstack.pop();
+            lastTemp++;
+        }
+        else if (sem == "@xor"){
+            makeOperation(symtab[to_string(lastTemp-1)], "%" + to_string(lastTemp) , "%" + to_string(lastTemp-1), "%" + sstack.top(), "xor");
+            sstack.pop();
+            lastTemp++;
+        }
+        else if (sem == "@minus"){
+            makeOperation(symtab[to_string(lastTemp-1)], "%" + to_string(lastTemp) , "%" + to_string(lastTemp-1), "%" + sstack.top(), "sub nsw");
+            sstack.pop();
+            lastTemp++;
+        }
+        else if (sem == "@add"){
+            makeOperation(symtab[to_string(lastTemp-1)], "%" + to_string(lastTemp) , "%" + to_string(lastTemp-1), "%" + sstack.top(), "add nsw");
+            sstack.pop();
+            lastTemp++;
+        }
+        else if (sem == "@mul"){
+            makeOperation(symtab[to_string(lastTemp-1)], "%" + to_string(lastTemp) , "%" + to_string(lastTemp-1), "%" + sstack.top(), "mul nsw");
+            sstack.pop();
+            lastTemp++;
+        }
+        else if (sem == "@div"){
+            if(symtab[to_string(lastTemp-1)] == "float")
+                makeOperation(symtab[to_string(lastTemp-1)], "%" + to_string(lastTemp) , "%" + to_string(lastTemp-1), "%" + sstack.top(), "fdiv");
+            else
+                makeOperation(symtab[to_string(lastTemp-1)], "%" + to_string(lastTemp) , "%" + to_string(lastTemp-1), "%" + sstack.top(), "sdiv");
+            sstack.pop();
+            lastTemp++;
+        }
+        else if (sem == "@rem"){
+            if(symtab[to_string(lastTemp-1)] == "float")
+                makeOperation(symtab[to_string(lastTemp-1)], "%" + to_string(lastTemp) , "%" + to_string(lastTemp-1), "%" + sstack.top(), "frem");
+            else
+                makeOperation(symtab[to_string(lastTemp-1)], "%" + to_string(lastTemp) , "%" + to_string(lastTemp-1), "%" + sstack.top(), "srem");
+            sstack.pop();
+            lastTemp++;
+        }
+        else if (sem == "@not"){
+            makeOperation(symtab[to_string(lastTemp-1)], "%" + to_string(lastTemp) , "%" + to_string(lastTemp-1), to_string(-1), "xor");
+            lastTemp++;
+        }
+        else if (sem == "@negate"){
+            makeOperation(symtab[to_string(lastTemp-1)], "%" + to_string(lastTemp) , to_string(0), "%" + to_string(lastTemp-1), "sub nsw");
+            lastTemp++;
+        }
+        else if (sem == "@startCondition"){
+            code[pc] = "br i1 %" + to_string(lastTemp-1) + ", label %" + to_string(lastTemp) + ", label ";
+            pcStack.push(pc);
+            lastTemp++;
+            pc++;
+        }
+        else if (sem == "@endIf"){
+            code[pcStack.top()] += "%" + to_string(lastTemp);
+            pcStack.pop();
+            lastTemp++;
+        }
+        else if (sem == "@startElse"){
+            code[pc] = "br label ";
+            pcStack.push(pc);
+            pc++;
+        }
+        else if (sem == "@endIf"){
+            code[pcStack.top()] += "%" + to_string(lastTemp);
+            pcStack.pop();
+            lastTemp++;
+        }
+        else throw invalid_argument("no sem like this" + sem);
 	}
 }
 
@@ -216,5 +326,12 @@ void CodeGenerator::loadVar(string type, string variableName, string valueName) 
         throw invalid_argument("symbol redeclaration");
     code[pc] = "%" + variableName + " = load " + type +", " + type + "* %" + valueName + ", align 1";
     symtab.insert(make_pair(variableName, type));
+    pc++;
+}
+
+void CodeGenerator::makeOperation(string resultType, string resultName, string firstVarName, string secondVarName, string operationType){
+    code[pc] = resultName + " = " + operationType + " " + symtab[firstVarName] + " " + firstVarName + " " + secondVarName;
+
+    symtab.insert(make_pair(resultName, resultType));
     pc++;
 }

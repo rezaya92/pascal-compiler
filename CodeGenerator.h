@@ -26,6 +26,7 @@ class CodeGenerator
 {
 public:
 	stack<string> sstack;
+    stack<int> pcStack;
 	string code[100000];
 	string stringConsts[100];
 	int lastTemp;
@@ -38,6 +39,7 @@ public:
 	void createVar(string name, string type);
 	void assignToVariable(string type, string variableName, string valueName) ;
 	void loadVar(string type, string variableName, string valueName);
+    void makeOperation(string resultType, string resultName, string firstVarName, string secondVarName, string operationType);
 	CodeGenerator();
 	virtual ~CodeGenerator();
 
